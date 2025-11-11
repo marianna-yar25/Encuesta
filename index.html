@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Encuesta Interactiva con Vue.js</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #2a2a2a;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    header {
+      background-color: #2a2a2a;
+      color: white;
+      width: 100%;
+      text-align: center;
+      padding: 20px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+      margin: 0;
+    }
+
+    .encuesta {
+      background: white;
+      padding: 25px;
+      margin-top: 30px;
+      border-radius: 12px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+      width: 90%;
+      max-width: 450px;
+      text-align: center;
+    }
+
+    .opcion {
+      background: #f4f4f4;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      margin: 10px 0;
+      padding: 10px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .opcion:hover {
+      background: #e6f2ff;
+    }
+
+    .resultado {
+      margin-top: 20px;
+      text-align: left;
+    }
+
+    .barra {
+      height: 18px;
+      border-radius: 6px;
+      background: #cce3ff;
+      margin-top: 5px;
+      transition: width 0.4s ease;
+    }
+
+    .boton-reset {
+      background-color: #ff5c5c;
+      border: none;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 15px;
+      transition: background 0.3s;
+    }
+
+    .boton-reset:hover {
+      background-color: #e04848;
+    }
+
+    footer {
+      margin-top: auto;
+      padding: 15px;
+      text-align: center;
+      background-color: #8eb4e0;
+      color: white;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Encuesta Con VUEJS</h1>
+    <p>Mostrar el rango de edad que predomina</p>
+  </header>
+
+  <div id="app">
+    <div class="encuesta">
+      <h2>{{ pregunta }}</h2>
+
+      <div 
+        v-for="(opcion, index) in opciones" 
+        :key="index"
+        class="opcion"
+        @click="votar(index)"
+      >
+        {{ opcion.texto }}
+      </div>
+
+      <div v-if="totalVotos > 0" class="resultado">
+        <h3>Resultados:</h3>
+        <div v-for="(opcion, index) in opciones" :key="'res' + index">
+          <strong>{{ opcion.texto }}:</strong> {{ porcentaje(opcion.votos) }}%
+          <div class="barra" :style="{ width: porcentaje(opcion.votos) + '%', background: colores[index] }"></div>
+        </div>
+      </div>
+
+      <button class="boton-reset" @click="reiniciar">Reiniciar</button>
+    </div>
+  </div>
+
+  <footer>
+    Encuesta Interactiva - Vue.js
+  </footer>
+
+  <script>
+    const { createApp } = Vue;
+
+    createApp({
+      data() {
+        return {
+          pregunta: 'Elige el rango de edad al que pertenezcas',
+          opciones: [
+            { texto: '0 a 15 años', votos: 0 },
+            { texto: '16 a 25 años', votos: 0 },
+            { texto: '26 a 35 años', votos: 0 },
+            { texto: '36 a 50 años', votos: 0 },
+            { texto: 'Más de 50 años', votos: 0}
+          ],
+          colores: ['#77bdfb', '#ffd166', '#ef476f', '#06d6a0']
+        };
+      },
+      computed: {
+        totalVotos() {
+          return this.opciones.reduce((total, o) => total + o.votos, 0);
+        }
+      },
+      methods: {
+        votar(index) {
+          this.opciones[index].votos++;
+          this.guardarResultados();
+        },
+        porcentaje(votos) {
+          return this.totalVotos === 0 ? 0 : ((votos / this.totalVotos) * 100).toFixed(1);
+        },
+        reiniciar() {
+          this.opciones.forEach(o => o.votos = 0);
+          localStorage.removeItem('encuestaVue');
+        },
+        guardarResultados() {
+          localStorage.setItem('encuestaVue', JSON.stringify(this.opciones));
+        },
+        cargarResultados() {
+          const datos = localStorage.getItem('encuestaVue');
+          if (datos) this.opciones = JSON.parse(datos);
+        }
+      },
+      mounted() {
+        this.cargarResultados();
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>
